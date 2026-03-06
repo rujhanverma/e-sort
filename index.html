@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MailSnap | Organized Emails</title>
+    <title>e-sort | Organized Emails</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
@@ -17,14 +17,40 @@
     <div class="container">
         <!-- Sidebar -->
         <aside class="sidebar">
-            <div class="logo-area">MailSnap</div>
+            <div class="sidebar-header">
+                <div class="logo-area">e-sort</div>
+                <div id="account-switcher" class="account-circle" onclick="handleSignoutClick(); handleAuthClick();"
+                    title="Switch Account" style="display: none;">?</div>
+            </div>
 
             <div class="nav-group">
-                <div class="nav-item active" data-category="All">📊 All Messages</div>
-                <div class="nav-item" data-category="Shopping">🛍️ Shopping</div>
-                <div class="nav-item" data-category="Tech">💻 Tech News</div>
-                <div class="nav-item" data-category="Billing">💳 Payments</div>
-                <div class="nav-item" data-category="Social">🤝 Social</div>
+                <div class="nav-item active" data-category="All" id="nav-all">📊 All Messages</div>
+                <div class="nav-item" data-category="Shopping" id="nav-shopping">🛍️ Shopping</div>
+                <div class="nav-item" data-category="Tech" id="nav-tech">💻 Tech News</div>
+                <div class="nav-item" data-category="Billing" id="nav-billing">💳 Payments</div>
+                <div class="nav-item" data-category="Social" id="nav-social">🤝 Social</div>
+            </div>
+
+
+
+            <div class="saved-filters">
+                <div class="section-title" id="title-advanced">Advanced Sorts</div>
+                <button class="add-rule-btn" onclick="openRuleModal()" id="btn-create-rule">+ Create Sort Rule</button>
+                <div id="sort-rules-list">
+                    <!-- Sorting rules will be injected here -->
+                </div>
+            </div>
+
+            <div class="language-switcher">
+                <div class="nav-item" id="nav-feedback" onclick="handleFeedback()"
+                    style="width: 100%; margin-bottom: 0.5rem; border: 1px solid var(--glass-border);">💬 Feedback</div>
+                <div class="nav-item" id="nav-history" onclick="openHistoryModal()"
+                    style="width: 100%; margin-bottom: 0.5rem; font-size: 0.8rem; opacity: 0.8; border: 1px solid var(--glass-border);">
+                    📜 View History</div>
+                <div style="display: flex; gap: 0.5rem; width: 100%;">
+                    <button onclick="setLanguage('en')" class="lang-btn active" id="lang-en">EN</button>
+                    <button onclick="setLanguage('hi')" class="lang-btn" id="lang-hi">हिं</button>
+                </div>
             </div>
 
             <div id="auth-buttons" style="margin-top: auto;">
@@ -36,13 +62,14 @@
 
         <!-- Main Dashboard -->
         <main class="dashboard">
-            <header class="header">
-                <div>
-                    <h1 id="welcome-text">Welcome, Bhai!</h1>
-                    <p id="status-text" style="color: var(--text-dim)">Please connect your Google account to see your
-                        emails.</p>
-                </div>
-                <input type="text" class="search-bar" placeholder="Search your snapshot...">
+            <div>
+                <h1 id="welcome-text">Welcome, Bhai!</h1>
+                <p id="status-text" style="color: var(--text-dim)">Please connect your Google account to see your
+                    emails.</p>
+            </div>
+            <div class="search-container">
+                <input type="text" class="search-bar" id="search-input" placeholder="Search your emails...">
+            </div>
             </header>
 
             <div class="email-grid" id="email-grid">
@@ -50,6 +77,89 @@
                 <div class="placeholder-msg">Click "Connect Google" to start organizing.</div>
             </div>
         </main>
+    </div>
+
+    <!-- Email Modal -->
+    <div id="email-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <div id="modal-body-content">
+                <header class="modal-header">
+                    <img id="modal-logo" src="" alt="" class="sender-logo">
+                    <div>
+                        <h2 id="modal-subject">Subject</h2>
+                        <p id="modal-sender" style="color: var(--text-dim)"></p>
+                    </div>
+                </header>
+                <hr style="border: 0.5px solid var(--glass-border); margin: 1 rem 0;">
+                <div class="iframe-container">
+                    <iframe id="email-content-frame" title="Email Content"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Rule Modal -->
+    <div id="rule-modal" class="modal">
+        <div class="modal-content rule-modal-content">
+            <span class="close-btn" onclick="closeRuleModal()">&times;</span>
+            <h2 style="margin-bottom: 2rem;">Create Sorting Rule</h2>
+
+            <form id="rule-form" onsubmit="saveRule(event)">
+                <div class="form-group">
+                    <label>Sort By:</label>
+                    <select id="rule-type" class="form-control" onchange="toggleRuleInputs()">
+                        <option value="heading">Heading (Subject)</option>
+                        <option value="keyword">Keyword (Body)</option>
+                        <option value="logo">Logo (Image Upload)</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="pattern-group">
+                    <label>Pattern to match:</label>
+                    <input type="text" id="rule-pattern" class="form-control" placeholder="e.g. GitHub, Invoice...">
+                </div>
+
+                <div class="form-group" id="logo-group" style="display: none;">
+                    <label>Upload Logo Pic:</label>
+                    <input type="file" id="rule-logo" class="form-control" accept="image/*">
+                    <p style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.5rem;">The app will "scan" files
+                        to match this sender/brand.</p>
+                </div>
+
+                <div class="form-group">
+                    <label>Rule Name:</label>
+                    <input type="text" id="rule-name" class="form-control" placeholder="e.g. My Work Emails">
+                </div>
+
+                <button type="submit" class="auth-btn" style="margin-top: 1rem;">Create Rule</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Feedback Input Modal -->
+    <div id="feedback-input-modal" class="modal">
+        <div class="modal-content rule-modal-content" style="width: 450px;">
+            <span class="close-btn" onclick="closeFeedbackInputModal()">&times;</span>
+            <h2 id="feedback-modal-title" style="margin-bottom: 1.5rem;">Share Your Feedback</h2>
+            <div class="form-group">
+                <textarea id="feedback-text" class="form-control" rows="5" placeholder="Type your message here..."
+                    style="resize: none; font-family: inherit; font-size: 0.9rem; line-height: 1.5;"></textarea>
+            </div>
+            <button onclick="submitFeedback()" id="btn-submit-feedback" class="auth-btn">Submit Feedback</button>
+        </div>
+    </div>
+
+    <!-- Feedback History Modal -->
+    <div id="history-modal" class="modal">
+        <div class="modal-content rule-modal-content" style="width: 500px;">
+            <span class="close-btn" onclick="closeHistoryModal()">&times;</span>
+            <h2 id="history-title" style="margin-bottom: 2rem;">Feedback History</h2>
+            <div id="feedback-history-list"
+                style="display: flex; flex-direction: column; gap: 1rem; max-height: 400px; overflow-y: auto;">
+                <!-- Feedbacks will be injected here -->
+            </div>
+        </div>
     </div>
 
     <!-- App Logic -->

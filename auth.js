@@ -1,5 +1,5 @@
 const CLIENT_ID = '755704742204-n06smbdkjqtnto5ngag6j4rmmhtcggcg.apps.googleusercontent.com';
-const SCOPES = 'https://www.googleapis.com/auth/gmail.readonly';
+const GMAIL_SCOPES = 'https://www.googleapis.com/auth/gmail.readonly profile email';
 
 let tokenClient;
 let accessToken = null;
@@ -7,7 +7,7 @@ let accessToken = null;
 function initTokenClient() {
     tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: CLIENT_ID,
-        scope: SCOPES,
+        scope: GMAIL_SCOPES,
         callback: (tokenResponse) => {
             if (tokenResponse && tokenResponse.access_token) {
                 accessToken = tokenResponse.access_token;
