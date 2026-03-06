@@ -6,6 +6,8 @@ let allEmails = [];
 let sortRules = JSON.parse(localStorage.getItem('sort_rules') || '[]');
 let feedbacks = JSON.parse(localStorage.getItem('user_feedbacks') || '[]');
 let currentLanguage = localStorage.getItem('app_lang') || 'en';
+let sidebarTimer;
+const HIDE_DELAY = 3000;
 
 const TRANSLATIONS = {
     en: {
@@ -357,6 +359,34 @@ window.onclick = function (event) {
 
 
 
+function initAutoHideSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const trigger = document.getElementById('sidebar-trigger');
+
+    function showSidebar() {
+        sidebar.classList.remove('closed');
+        resetSidebarTimer();
+    }
+
+    function hideSidebar() {
+        if (!sidebar.matches(':hover')) {
+            sidebar.classList.add('closed');
+        }
+    }
+
+    function resetSidebarTimer() {
+        clearTimeout(sidebarTimer);
+        sidebarTimer = setTimeout(hideSidebar, HIDE_DELAY);
+    }
+
+    sidebar.addEventListener('mousemove', showSidebar);
+    sidebar.addEventListener('mouseenter', showSidebar);
+    trigger.addEventListener('mouseenter', showSidebar);
+
+    // Initial timer
+    resetSidebarTimer();
+}
+
 async function fetchUserInfo() {
     const token = localStorage.getItem('gmail_access_token');
     if (!token) return null;
@@ -391,6 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderSortRules();
     updateUI();
+    initAutoHideSidebar();
 });
 
 // Custom event from auth.js
