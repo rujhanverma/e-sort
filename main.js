@@ -1,62 +1,27 @@
-const mockEmails = [
-    {
-        id: 1,
-        sender: "Amazon",
-        domain: "amazon.com",
-        subject: "Your Package has been delivered!",
-        snippet: "Great news! Your order #123-45678-910 was delivered at your front door...",
-        category: "Shopping",
-        date: "2 mins ago"
-    },
-    {
-        id: 2,
-        sender: "GitHub",
-        domain: "github.com",
-        subject: "[GitHub] Security alert for your repository",
-        snippet: "We found a known security vulnerability in one of your dependencies...",
-        category: "Tech",
-        date: "1 hour ago"
-    },
-    {
-        id: 3,
-        sender: "LinkedIn",
-        domain: "linkedin.com",
-        subject: "You have 5 new job recommendations",
-        snippet: "Based on your profile, we think you might be interested in these roles...",
-        category: "Social",
-        date: "3 hours ago"
-    },
-    {
-        id: 4,
-        sender: "Netflix",
-        domain: "netflix.com",
-        subject: "New Season of your favorite show is out!",
-        snippet: "Don't miss the latest episodes of 'The Crown' now streaming on Netflix...",
-        category: "Entertainment",
-        date: "Yesterday"
-    },
-    {
-        id: 5,
-        sender: "Google Cloud",
-        domain: "google.com",
-        subject: "Your monthly billing statement",
-        snippet: "Your invoice for January is now available in the Google Cloud Console...",
-        category: "Billing",
-        date: "2 days ago"
-    }
-];
-
 function getLogoUrl(domain) {
     return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
 }
 
-function renderEmails(filter = 'All') {
+let allEmails = [];
+
+async function renderEmails(filter = 'All') {
     const grid = document.getElementById('email-grid');
+    grid.innerHTML = '<div class="loader">Fetching your snapshots...</div>';
+
+    if (allEmails.length === 0) {
+        allEmails = await fetchEmails();
+    }
+
     grid.innerHTML = '';
 
-    const filtered = filter === 'All' 
-        ? mockEmails 
-        : mockEmails.filter(e => e.category === filter || e.sender === filter);
+    if (allEmails.length === 0) {
+        grid.innerHTML = '<div class="placeholder-msg">No emails found or access denied.</div>';
+        return;
+    }
+
+    const filtered = filter === 'All'
+        ? allEmails
+        : allEmails.filter(e => e.category === filter || e.sender.includes(filter));
 
     filtered.forEach(email => {
         const card = document.createElement('div');
@@ -78,8 +43,6 @@ function renderEmails(filter = 'All') {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    renderEmails();
-
     const navItems = document.querySelectorAll('.nav-item');
     navItems.forEach(item => {
         item.addEventListener('click', () => {
@@ -89,4 +52,13 @@ document.addEventListener('DOMContentLoaded', () => {
             renderEmails(category);
         });
     });
+});
+
+// Custom event from auth.js
+document.addEventListener('auth-success', () => {
+    document.getElementById('login-btn').style.display = 'none';
+    document.getElementById('logout-btn').style.display = 'block';
+    document.getElementById('welcome-text').innerText = 'Your Snapshot is Ready!';
+    document.getElementById('status-text').innerText = 'We have organized your latest emails.';
+    renderEmails();
 });
