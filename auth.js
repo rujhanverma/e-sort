@@ -32,6 +32,11 @@ function handleSignoutClick() {
         google.accounts.oauth2.revoke(accessToken);
         accessToken = null;
         localStorage.removeItem('gmail_access_token');
+        // Clear runtime state before reload or re-auth
+        location.reload();
+    } else {
+        // Just in case token is in storage but not in variable
+        localStorage.removeItem('gmail_access_token');
         location.reload();
     }
 }

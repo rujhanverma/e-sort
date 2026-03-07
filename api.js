@@ -12,6 +12,11 @@ async function fetchEmails() {
             const listResponse = await fetch(url, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
+
+            if (!listResponse.ok) {
+                throw new Error(`Gmail API error: ${listResponse.status}`);
+            }
+
             const listData = await listResponse.json();
 
             if (listData.messages) {
@@ -24,7 +29,10 @@ async function fetchEmails() {
 
         } while (nextPageToken);
 
-        if (allMessages.length === 0) return [];
+        if (allMessages.length === 0) {
+            console.warn('No messages found in Gmail.');
+            return [];
+        }
 
         // Step 2: Fetch details for messages
         // To speed up, we fetch details in chunks or just a reasonable subset if too many
@@ -103,6 +111,10 @@ async function fetchEmails() {
         return await Promise.all(emailPromises);
     } catch (error) {
         console.error('Error fetching emails:', error);
+        if (error.message && error.message.includes('401')) {
+            console.error('Token unauthorized. Clearing token.');
+            localStorage.removeItem('gmail_access_token');
+        }
         return [];
     }
 }

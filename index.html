@@ -20,6 +20,8 @@
         <aside class="sidebar">
             <div class="sidebar-header">
                 <div class="logo-area">e-sort</div>
+                <button id="header-login-btn" class="header-auth-btn" onclick="handleAuthClick()"
+                    title="Connect Google">🔗</button>
                 <div id="account-switcher" class="account-circle" onclick="handleSignoutClick(); handleAuthClick();"
                     title="Switch Account" style="display: none;">?</div>
             </div>
@@ -54,23 +56,23 @@
                 </div>
             </div>
 
-            <div id="auth-buttons" style="margin-top: auto;">
-                <button id="login-btn" onclick="handleAuthClick()" class="auth-btn">Connect Google</button>
-                <button id="logout-btn" onclick="handleSignoutClick()" class="auth-btn"
-                    style="display: none;">Disconnect</button>
-            </div>
         </aside>
 
         <!-- Main Dashboard -->
         <main class="dashboard">
-            <div>
-                <h1 id="welcome-text">Welcome, Bhai!</h1>
-                <p id="status-text" style="color: var(--text-dim)">Please connect your Google account to see your
-                    emails.</p>
-            </div>
-            <div class="search-container">
-                <input type="text" class="search-bar" id="search-input" placeholder="Search your emails...">
-            </div>
+            <header class="header">
+                <div>
+                    <h1 id="welcome-text">Welcome, Bhai!</h1>
+                    <p id="status-text" style="color: var(--text-dim)">Please connect your Google account to see your
+                        emails.</p>
+                </div>
+                <div class="search-container">
+                    <input type="text" class="search-bar" id="search-input" placeholder="Search your emails...">
+                    <button id="ai-help-btn" class="header-auth-btn" style="width: auto; padding: 0 1rem; gap: 0.5rem;"
+                        title="AI Help">
+                        <span>🤖</span> <small style="font-size: 0.7rem; font-weight: 800;">AI HELPER</small>
+                    </button>
+                </div>
             </header>
 
             <div class="email-grid" id="email-grid">
@@ -163,9 +165,33 @@
         </div>
     </div>
 
+    <!-- AI Chatbot Window -->
+    <div id="ai-chat-window" class="chat-window">
+        <div class="chat-header">
+            <div style="display: flex; align-items: center; gap: 0.8rem;">
+                <div class="ai-avatar">🤖</div>
+                <div>
+                    <div style="font-weight: 800; font-size: 0.9rem;">e-sort AI Helper</div>
+                    <div style="font-size: 0.65rem; color: #4ade80;">● Online</div>
+                </div>
+            </div>
+            <span class="close-chat" id="close-chat">&times;</span>
+        </div>
+        <div id="chat-messages" class="chat-messages">
+            <div class="message ai">
+                Hello! I'm your e-sort assistant. How can I help you organize your emails today?
+            </div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-input" placeholder="Ask me anything...">
+            <button id="send-chat">Send</button>
+        </div>
+    </div>
+
     <!-- App Logic -->
     <script src="auth.js"></script>
     <script src="api.js"></script>
+    <script src="chatbot.js"></script> <!-- New Script -->
     <script src="main.js"></script>
 </body>
 

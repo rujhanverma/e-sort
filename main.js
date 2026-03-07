@@ -3,7 +3,8 @@ function getLogoUrl(domain) {
 }
 
 let allEmails = [];
-let sortRules = JSON.parse(localStorage.getItem('sort_rules') || '[]');
+let currentUserEmail = null; // New state to track current user
+let sortRules = []; // Will be loaded after login
 let feedbacks = JSON.parse(localStorage.getItem('user_feedbacks') || '[]');
 let currentLanguage = localStorage.getItem('app_lang') || 'en';
 let sidebarTimer;
@@ -157,8 +158,6 @@ function updateUI() {
 
     document.getElementById('title-advanced').innerText = t.titleAdvanced;
     document.getElementById('btn-create-rule').innerText = t.btnCreateRule;
-    document.getElementById('login-btn').innerText = t.connectBtn;
-    document.getElementById('logout-btn').innerText = t.disconnectBtn;
     document.getElementById('nav-feedback').innerText = t.navFeedback;
     document.getElementById('nav-history').innerText = t.navHistory;
     document.getElementById('history-title').innerText = t.historyTitle;
@@ -169,12 +168,6 @@ function updateUI() {
     // Toggle active state on buttons
     document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById(`lang-${currentLanguage}`).classList.add('active');
-
-    // Update messages if auth success already happened
-    if (document.getElementById('logout-btn').style.display === 'block') {
-        document.getElementById('welcome-text').innerText = t.readyTitle;
-        document.getElementById('status-text').innerText = t.readyStatus;
-    }
 }
 
 async function renderEmails(filter = 'All', mode = 'builtin') {
@@ -201,6 +194,8 @@ async function renderEmails(filter = 'All', mode = 'builtin') {
 
     if (allEmails.length === 0) {
         grid.innerHTML = `<div class="placeholder-msg">${t.noEmails}</div>`;
+        // If we think it's an auth error, show the connect button again
+        document.getElementById('header-login-btn').style.display = 'flex';
         return;
     }
 
@@ -305,15 +300,17 @@ async function saveRule(event) {
     if (type === 'logo') {
         const logoFile = document.getElementById('rule-logo').files[0];
         if (logoFile) {
-            // "Scanning" the logo: We'll use the filename as the pattern match 
-            // for simplicity in this implementation, simulating a match.
             pattern = logoFile.name.split('.')[0];
         }
     }
 
     if (name && (pattern || type === 'logo')) {
         sortRules.push({ type, name, pattern });
-        localStorage.setItem('sort_rules', JSON.stringify(sortRules));
+        if (currentUserEmail) {
+            localStorage.setItem(`sort_rules_${currentUserEmail}`, JSON.stringify(sortRules));
+        } else {
+            localStorage.setItem('sort_rules', JSON.stringify(sortRules)); // Fallback
+        }
         renderSortRules();
         closeRuleModal();
     }
@@ -322,7 +319,11 @@ async function saveRule(event) {
 function deleteRule(name, event) {
     event.stopPropagation();
     sortRules = sortRules.filter(r => r.name !== name);
-    localStorage.setItem('sort_rules', JSON.stringify(sortRules));
+    if (currentUserEmail) {
+        localStorage.setItem(`sort_rules_${currentUserEmail}`, JSON.stringify(sortRules));
+    } else {
+        localStorage.setItem('sort_rules', JSON.stringify(sortRules));
+    }
     renderSortRules();
 }
 
@@ -427,19 +428,27 @@ document.addEventListener('DOMContentLoaded', () => {
 // Custom event from auth.js
 document.addEventListener('auth-success', async () => {
     const t = TRANSLATIONS[currentLanguage];
-    document.getElementById('login-btn').style.display = 'none';
-    document.getElementById('logout-btn').style.display = 'block';
+    document.getElementById('header-login-btn').style.display = 'none';
     document.getElementById('welcome-text').innerText = t.readyTitle;
     document.getElementById('status-text').innerText = t.readyStatus;
 
-    // Update switcher initial
+    // Update account switcher and load user-specific rules
     const userInfo = await fetchUserInfo();
     if (userInfo) {
+        currentUserEmail = userInfo.email;
+        // Load rules for this specific user
+        const storedRules = localStorage.getItem(`sort_rules_${currentUserEmail}`);
+        sortRules = storedRules ? JSON.parse(storedRules) : JSON.parse(localStorage.getItem('sort_rules') || '[]');
+
         const initial = (userInfo.name || userInfo.email || '?').charAt(0).toUpperCase();
         const switcher = document.getElementById('account-switcher');
         switcher.innerText = initial;
         switcher.style.display = 'flex';
+    } else {
+        // Fallback for demo/no-email environments
+        sortRules = JSON.parse(localStorage.getItem('sort_rules') || '[]');
     }
 
+    renderSortRules();
     renderEmails();
 });
